@@ -324,7 +324,7 @@
         android:id="@+id/millisecondsText"
         android:textSize="12dp"
         android:layout_alignTop="@+id/millisecondsLabel"
-        android:layout_toStartOf="@+id/eulerZLabel" />
+        android:layout_alignStart="@+id/linAccZ" />
 
 
 </RelativeLayout>
