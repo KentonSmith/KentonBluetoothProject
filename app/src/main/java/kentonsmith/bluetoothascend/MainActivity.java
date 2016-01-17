@@ -45,13 +45,9 @@ public class MainActivity extends Activity {
     private final static int REQUEST_ENABLE_BT = 1;
     private boolean fromBluetooth = false;
     private BluetoothAdapter mBluetoothAdapter;
-
     private ArrayAdapter mArrayAdapter;
-
     private static Handler mHandler;
-
     private boolean inputStreamIsOpen;
-
     private ListView lv;
 
     //KQS_TO_DO_11_26_PM
@@ -63,20 +59,12 @@ public class MainActivity extends Activity {
     private String MAC_ADDRESS_WE_WANT = "C4:85:08:53:E7:5A";
 
     private BroadcastReceiver mReceiver;
-
     private BroadcastReceiver uuidReceiver;
-
     private BluetoothSocket clientSocket;
-
     private UUID uuid_that_connected = null;
-
     private BluetoothSocket mmSocket;
-
     private ManageConnectionThread mCT;
-
     private StringBuffer sb;
-
-
     private ArrayList<String> ArduinoDataList;
 
     //NEED TO CHANGE FOR PC, POSSIBLE LOOP THROUGH ALL POSSIBLE UUIDS
@@ -86,9 +74,7 @@ public class MainActivity extends Activity {
     private UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
     private BluetoothDevice mainDevice;
-
     private ArrayList<BluetoothDevice> myDevices;
-
     private ArrayList<String> uuid_list;
 
 
@@ -555,80 +541,6 @@ public class MainActivity extends Activity {
     }
 
 
-/*
-    public void readTestButtonOnClick(View v)
-    {
-        Log.v("readTestButtonOnClick", "At beginning readTestButtonOnClick");
-        Toast toast3 = Toast.makeText(getApplicationContext(), "Read Test Button Pressed", Toast.LENGTH_SHORT);
-        toast3.show();
-
-
-
-
-        if(mCT != null)
-        {
-
-            Log.v("readTestButtonOnClick", "mCT.getState().toString() = " + mCT.getState().toString());
-
-
-
-            //case where thread is not null and already running, don't want to start another one
-            if(!mCT.getState().equals(Thread.State.NEW))  //nnot a new thread, already running
-            {
-                Log.v("readTestButtonOnClick", mCT.getState().toString());
-                Toast toast7 = Toast.makeText(getApplicationContext(), "Thread is currently running. Cannot perform a read while reading!", Toast.LENGTH_SHORT);
-                toast7.show();
-
-                return; // exit out of function, we are already reading
-            }
-
-
-            //DIALOG STUFF
-
-            AlertDialog.Builder mDialog = new AlertDialog.Builder(MainActivity.this);
-            mDialog.setTitle("Is There Incoming Data?");
-            mDialog.setMessage("Confirm That Arduino Is Sending Data.\nIf not, app will crash");
-            mDialog.setPositiveButton("YES", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.cancel();
-
-                    //MCT.RUN GOES HERE
-                    Toast toast5 = Toast.makeText(getApplicationContext(), "Read Operation Confirmed\n mCT.run() stub here", Toast.LENGTH_SHORT);
-                    toast5.show();
-
-                    //used to by mCT.run()  KENTON SMITH 12/30/2015
-                   mCT.start();
-
-                    Log.v("readTestButtonOnClick", "Main UI stuff after mCT.start()");
-
-                }
-            });
-            mDialog.setNegativeButton("NO", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.cancel();
-
-                    //MCT.RUN DOES HERE
-                    Toast toast5 = Toast.makeText(getApplicationContext(), "Read Operation Cancelled", Toast.LENGTH_SHORT);
-                    toast5.show();
-
-                }
-            });
-
-            AlertDialog alert = mDialog.create();
-            alert.show();
-
-        }
-        else
-        {
-            Toast toast4 = Toast.makeText(getApplicationContext(), "mCT is null.  Not reading anything", Toast.LENGTH_SHORT);
-            toast4.show();
-            Log.v("readTestButtonOnClick", "mCT is null.  Not reading anything");
-        }
-
-
-    }
-*/
-
     public void writeTestButtonOnClick(View v)
     {
         Log.v("writeTestButtonOnClick", "At beginning writeTestButtonOnClick");
@@ -956,51 +868,6 @@ public class MainActivity extends Activity {
 
     }
 
-
-    /*
-    public void bluetoothstartOnClick(View view) {
-        Toast toast = Toast.makeText(getApplicationContext(), "Bluetooth Button Pressed", Toast.LENGTH_SHORT);
-        toast.show();
-
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-
-        Log.v("bluetoothstartOnClick", "Before Bluetooth Adapter");
-        if (mBluetoothAdapter == null) {
-            // Device does not support Bluetooth
-            Log.v("bluetoothstartOnClick", "If Statement Bluetooth Button");
-            Toast toast2 = Toast.makeText(getApplicationContext(), "Your device does not support bluetooth", Toast.LENGTH_LONG);
-            toast2.show();
-        }
-        else
-        {
-            //If you have bluetooth but it isn't enabled.  This will start an intent to try to enable it.
-            Log.v("bluetoothstartOnClick", "Beginning Else Statement Bluetooth Adapter");
-            Log.v("bluetoothstartOnClick", "mBluetoothAdapter == null? " + (mBluetoothAdapter == null));
-            Log.v("bluetoothstartOnClick", "mBluetoothAdapter is enabled?? " + mBluetoothAdapter.isEnabled());
-            if (!mBluetoothAdapter.isEnabled()) {
-                try
-                {
-                    Log.v("bluetoothstartOnClick", "Before startActivity in try block");
-                    fromBluetooth = true;
-                    Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                    startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-                    Log.v("bluetoothstartOnClick", "After startActivity in try block");
-                }
-                catch(Exception e)
-                {
-                    Log.v("bluetoothstartOnClick", e.toString());
-                }
-
-            }
-            else  //already connected
-            {
-                Log.v("bluetoothstartOnClick", "ScanBluetooth being called in case where bluetooth already is enabled");
-               // scanBluetooth();
-            }
-        }
-    }
-    */
 
     public void makeConnection()
     {
