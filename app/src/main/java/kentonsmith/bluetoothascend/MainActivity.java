@@ -11,6 +11,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Handler;
+import android.os.Message;
 import android.os.ParcelUuid;
 import android.os.Parcelable;
 import android.os.SystemClock;
@@ -46,6 +48,10 @@ public class MainActivity extends Activity {
 
     private ArrayAdapter mArrayAdapter;
 
+    private static Handler mHandler;
+
+    private boolean inputStreamIsOpen;
+
     private ListView lv;
 
     //KQS_TO_DO_11_26_PM
@@ -68,8 +74,10 @@ public class MainActivity extends Activity {
 
     private ManageConnectionThread mCT;
 
+    private StringBuffer sb;
 
-    private ArrayList<Integer> ArduinoDataList;
+
+    private ArrayList<String> ArduinoDataList;
 
     //NEED TO CHANGE FOR PC, POSSIBLE LOOP THROUGH ALL POSSIBLE UUIDS
     //Randomly off internet; 1d8df488-9d58-11e5-8994-feff819cdc9f
@@ -85,9 +93,12 @@ public class MainActivity extends Activity {
 
 
     private class ManageConnectionThread extends Thread {
-        private final BluetoothSocket mmSocket;
-        private final InputStream mmInStream;
-        private final OutputStream mmOutStream;
+        //private final BluetoothSocket mmSocket;
+        private InputStream mmInStream;
+        private OutputStream mmOutStream;
+
+       // private final InputStream mmInStream;
+       // private final OutputStream mmOutStream;
 
         public ManageConnectionThread(BluetoothSocket socket) {
             mmSocket = socket;
@@ -116,13 +127,95 @@ public class MainActivity extends Activity {
                     byte[] buffer = new byte[128];
                     String readMessage;
                     int bytes;
-                    if (mmInStream.available() > 0) {
+
+                    if(mmInStream == null)
+                    {
+                        Log.v("ManageConnectionThread", "mmInStream is null after being stopped now throwing exception to try and break out of thread");
+                        throw new IOException("Stop button was pressed");
+                    }
+
+                    if (inputStreamIsOpen == true && mmInStream.available() > 0) {
                         try {
                             // Read from the InputStream
                             bytes = mmInStream.read(buffer);
                             readMessage = new String(buffer, 0, bytes);
                             Log.v("ManageConnectionThread", readMessage);
 
+                            //lock
+                            sb.append(readMessage);  //shared data with main UI thread
+                            //unlock
+                           String tempString = sb.toString();
+
+                            int firstAmpersandIndex = tempString.indexOf('&');
+
+                            String parseableChunk = "";
+                            try
+                            {
+                                parseableChunk = tempString.substring(0, firstAmpersandIndex);
+                            }
+                            catch(StringIndexOutOfBoundsException e)  //case where there is no ampersand in remaining string
+                            {
+                                parseableChunk = "";
+                            }
+
+
+                            //Log.v("ManageConnectionThread", "Current parseableChunk = " + parseableChunk);
+
+
+                            //DO THIS TO HAVE tenComponents keep up with bluetooth data streaming in
+                            while(meetsCriteriaTenComponents(parseableChunk) != null)  //tenComponents is passed in as reference and will be assigned to results of parsing
+                            {
+                                //send to main chunk handler in bundle, remove first chunk from string, reassign stringbuilder
+
+                              //  Log.v("ManageConnectionThread", "sb before removing chunk = " + sb.toString());
+
+                                ArrayList<String> tenComponents = meetsCriteriaTenComponents(parseableChunk);
+                                Log.v("ManageConnectionThread", "Ten components = " + tenComponents);
+
+                                Message m = new Message();
+                                Bundle b = new Bundle();
+
+                                b.putLong("Milliseconds", Long.valueOf(tenComponents.get(0)));
+
+                                b.putDouble("Euler_X", Double.valueOf(tenComponents.get(1)));
+                                b.putDouble("Euler_Y", Double.valueOf(tenComponents.get(2)));
+                                b.putDouble("Euler_Z", Double.valueOf(tenComponents.get(3)));
+
+                                b.putDouble("Gyro_X", Double.valueOf(tenComponents.get(4)));
+                                b.putDouble("Gyro_Y", Double.valueOf(tenComponents.get(5)));
+                                b.putDouble("Gyro_Z", Double.valueOf(tenComponents.get(6)));
+
+                                b.putDouble("Lin_Acc_X", Double.valueOf(tenComponents.get(7)));
+                                b.putDouble("Lin_Acc_Y", Double.valueOf(tenComponents.get(8)));
+                                b.putDouble("Lin_Acc_Z", Double.valueOf(tenComponents.get(9)));
+
+                                m.setData(b);
+
+                                sb = new StringBuffer(tempString.substring(firstAmpersandIndex + 1, tempString.length()));
+                              //  Log.v("ManageConnectionThread", "sb after removing chunk = " + sb.toString());
+
+                                mHandler.sendMessage(m);  //neeed to add code to update UI
+
+                                tempString = sb.toString();
+
+                                firstAmpersandIndex = tempString.indexOf('&');
+
+                                try
+                                {
+                                    parseableChunk = tempString.substring(0, firstAmpersandIndex);
+                                }
+                                catch(StringIndexOutOfBoundsException e)  //case where there is no ampersand in remaining string
+                                {
+                                    parseableChunk = "";
+                                }
+
+
+                            }
+
+
+
+
+                            //ArduinoDataList.add(readMessage);             //KQS 12/30/2015 NEED MUTEX SINCE TWO THREADS USE THIS
 
                         } catch (IOException e) {
                             Log.v("ManageConnectionThread", "disconnected");
@@ -136,6 +229,9 @@ public class MainActivity extends Activity {
                 } catch (IOException e) {
 
                     e.printStackTrace();
+                    Log.v("ManageConnectionThread", "Breaking out of while loop for reading");
+
+                    break;
                 }
 
             }
@@ -167,12 +263,17 @@ public class MainActivity extends Activity {
             try {
                 Log.v("ManageConnectionThread", "try block for write method is called inside manage connection thread");
 
-
+                mmOutStream.flush();  //clear out any garbage from last time
+                mmOutStream.flush();  //clear out any garbage from last time
 
                 mmOutStream.write(bytes);
                 Log.v("ManageConnectionThread", "mmOutStream.writes(" + Arrays.toString(bytes) + ") was successful");
 
-               // mmOutStream.close();
+                mmOutStream.flush();  //clear out any garbage from last time
+                mmOutStream.flush();  //clear out any garbage from last time
+
+
+                // mmOutStream.close();
             } catch (IOException e) {
                 Log.v("ManageConnectionThread", "mmOutStream.writes(" + Arrays.toString(bytes) + ") FAILED.  Now printing error");
                 Log.v("ManageConnectionThread", e.toString());
@@ -184,16 +285,29 @@ public class MainActivity extends Activity {
         public void cancel() {
             try {
                 //Recently added these.  Commented out mmOutStream.close()in the Write function of this thread
-                mmOutStream.close();
-                mmInStream.close();
+                //mmOutStream.close();
+                //mmInStream.close();
+                inputStreamIsOpen = false;
+                Log.v("ManageConnectionThread", "inputStreamIsOpen flag is set to false since stop button was pressed");
 
-                mmSocket.close();
+                throw new IOException("blah");
+               // mmInStream = null;
+                //mmOutStream = null;
+
+                //mmSocket.close();  //Use to be uncommented 1/11/2016
+
+
             } catch (IOException e) { }
         }
     }
 
     private class ConnectThread extends Thread {
         private BluetoothDevice mmDevice;
+
+        public void shortCutConnect()
+        {
+            makeConnection();
+        }
 
         public ConnectThread(BluetoothDevice device, String uuid_string) {
             // Use a temporary object that is later assigned to mmSocket,
@@ -278,14 +392,197 @@ public class MainActivity extends Activity {
         }
     }
 
+    public void whatWasReadInButtonOnClick(View v)
+    {
+        Log.v("ReadInButtonOnClick", "printing arduinio data in logcat");
+
+        String[] split_on_ampersand = sb.toString().split("&");
+
+        Log.v("ReadInButtonOnClick", "Time elapsed(milliseconds), EulerX (angle), EulerY (angle), EulerZ (angle), GyroX (rad/s), GyroY (rad/s), GyroZ (rad/s), Lin_AccX (m/s^2), Lin_AccY (m/s^2), Lin_AccZ (m/s^2)");
+        for(int i = 0; i < split_on_ampersand.length; i++)
+        {
+            split_on_ampersand[i] = split_on_ampersand[i].replace("$",",");
+
+            Log.v("ReadInButtonOnClick", split_on_ampersand[i]);
+        }
+
+
+        //Log.v("ReadInButtonOnClick", Arrays.toString(split_on_ampersand));
+    }
+
+
+    //used to be called readTestButtonOnClick
+    public void startReadOnClick(View v)
+    {
+        Log.v("startReadOnClick", "At beginning startReadOnClick");
+        Toast toast3 = Toast.makeText(getApplicationContext(), "startReadOnClick Button Pressed", Toast.LENGTH_SHORT);
+        toast3.show();
+
+
+        if(mCT == null)
+        {
+            manageConnectionThreadFunction(mmSocket);  //start reading WHEN we want instead of immediately after connecting
+        }
+
+        if(mCT == null)  //if it is still equal to null after manage connection thread than that means we could not establish thread from socket
+        {
+            Toast toast4 = Toast.makeText(getApplicationContext(), "mCT is null.  Not reading anything", Toast.LENGTH_SHORT);
+            toast4.show();
+            Log.v("startReadOnClick", "mCT is null.  Not reading anything");
+            return;  //unsuccessful
+
+        }
+        else  //mCT != null
+        {
+
+            Log.v("startReadOnClick", "mCT.getState().toString() = " + mCT.getState().toString());
+
+            //case where thread is not null and already running, don't want to start another one
+            if(!mCT.getState().equals(Thread.State.NEW))  //nn\ot a new thread, already running
+            {
+                Log.v("startReadOnClick", "Current thread state = " + mCT.getState().toString());
+                Toast toast7 = Toast.makeText(getApplicationContext(), "Thread is currently running. Cannot perform a read while reading!", Toast.LENGTH_SHORT);
+                toast7.show();
+
+
+                Log.v("startReadOnClick", "inputStreamIsOpen is being set to true - should be continuing to read");
+
+                inputStreamIsOpen = true;  //ensure that we are reading in stuff
+
+                byte[] read_signal = new byte[1];
+                read_signal[0] = 82;  //capital 'R'   tell arduino it is ok to start sendign data again
+
+                mCT.writeByteArray(read_signal);
+
+                return; // exit out of function, we are already reading
+            }
+
+
+            //DIALOG STUFF
+
+            /*
+            if(mmSocket == null)
+            {
+                connectedThread.shortCutConnect();
+            }
+*/
+
+            AlertDialog.Builder mDialog = new AlertDialog.Builder(MainActivity.this);
+            mDialog.setTitle("Is There Incoming Data?");
+            mDialog.setMessage("Confirm That Arduino Is Sending Data.\nIf not, app will crash");
+            mDialog.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+
+                    //MCT.RUN GOES HERE
+                    Toast toast5 = Toast.makeText(getApplicationContext(), "Read Operation Confirmed\n mCT.run() stub here", Toast.LENGTH_SHORT);
+                    toast5.show();
+
+                    inputStreamIsOpen = true;
+
+                    Log.v("startReadOnClick", "inputStreamIsOpen flag is set to true since read button pressed");
+
+
+                    //used to by mCT.run()  KENTON SMITH 12/30/2015
+                    mCT.start();
+
+                    byte[] read_signal = new byte[1];
+                    read_signal[0] = 82;  //capital 'R'
+
+                    mCT.writeByteArray(read_signal);
+
+                    Log.v("startReadOnClick", "Main UI stuff after mCT.start()");
+
+                }
+            });
+            mDialog.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+
+                    //MCT.RUN DOES HERE
+                    Toast toast5 = Toast.makeText(getApplicationContext(), "Read Operation Cancelled", Toast.LENGTH_SHORT);
+                    toast5.show();
+
+                }
+            });
+
+            AlertDialog alert = mDialog.create();
+            alert.show();
+
+        }
+
+
+
+    }
+
+    public void stopReadAndResetArduinoTimeOnClick(View v)
+    {
+        if(mCT == null)
+        {
+            Toast toast4 = Toast.makeText(getApplicationContext(), "mCT is null.  No reading process to stop", Toast.LENGTH_SHORT);
+            toast4.show();
+            Log.v("stopReadOnClick", "mCT is null. No reading process to stop");
+        }
+        else {
+
+            Log.v("stopReadOnClick", "Current thread state = " + mCT.getState().toString());
+
+
+            byte[] read_signal = new byte[1];
+            read_signal[0] = 83;  //capital 'S'   Tell arduino to stop writing data
+            mCT.writeByteArray(read_signal);
+            Log.v("stopReadOnClick", "Writing to bluetooth to stop = " + read_signal.toString());
+
+
+          //  Log.v("stopReadOnClick", "Attempting to interrupt mCT");
+
+            //     mCT.interrupt();
+
+            Log.v("stopReadOnClick", "Attempting to cancel mCT");
+
+            inputStreamIsOpen = false;   //instead of cancelling thread, just switch flag to keep data halted, but not shut off
+           // mCT.cancel(); //set inputsteamreadin to false
+
+            Log.v("stopReadOnClick", "Current thread state = " + mCT.getState().toString());
+
+
+//            mCT = null;
+
+
+
+        }
+
+    }
+
+
+/*
     public void readTestButtonOnClick(View v)
     {
         Log.v("readTestButtonOnClick", "At beginning readTestButtonOnClick");
         Toast toast3 = Toast.makeText(getApplicationContext(), "Read Test Button Pressed", Toast.LENGTH_SHORT);
         toast3.show();
 
+
+
+
         if(mCT != null)
         {
+
+            Log.v("readTestButtonOnClick", "mCT.getState().toString() = " + mCT.getState().toString());
+
+
+
+            //case where thread is not null and already running, don't want to start another one
+            if(!mCT.getState().equals(Thread.State.NEW))  //nnot a new thread, already running
+            {
+                Log.v("readTestButtonOnClick", mCT.getState().toString());
+                Toast toast7 = Toast.makeText(getApplicationContext(), "Thread is currently running. Cannot perform a read while reading!", Toast.LENGTH_SHORT);
+                toast7.show();
+
+                return; // exit out of function, we are already reading
+            }
+
+
             //DIALOG STUFF
 
             AlertDialog.Builder mDialog = new AlertDialog.Builder(MainActivity.this);
@@ -299,9 +596,10 @@ public class MainActivity extends Activity {
                     Toast toast5 = Toast.makeText(getApplicationContext(), "Read Operation Confirmed\n mCT.run() stub here", Toast.LENGTH_SHORT);
                     toast5.show();
 
-                    mCT.run();
+                    //used to by mCT.run()  KENTON SMITH 12/30/2015
+                   mCT.start();
 
-
+                    Log.v("readTestButtonOnClick", "Main UI stuff after mCT.start()");
 
                 }
             });
@@ -329,7 +627,7 @@ public class MainActivity extends Activity {
 
 
     }
-
+*/
 
     public void writeTestButtonOnClick(View v)
     {
@@ -349,9 +647,10 @@ public class MainActivity extends Activity {
            // temp[0] = 56;
            // mCT.writeByteArray(temp);
 
-            byte[] temp2 = new byte[2];
+
+
+            byte[] temp2 = new byte[1];
             temp2[0] = 97;
-            temp2[1] = 98;
             mCT.writeByteArray(temp2);
 
             Toast toast4 = Toast.makeText(getApplicationContext(), "writeTestButtonOnClick ", Toast.LENGTH_SHORT);
@@ -409,8 +708,65 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mHandler = new Handler(){
+            @Override
+            public void handleMessage(Message msg) {
+                Bundle b = msg.getData();
 
-        ArduinoDataList = new ArrayList<Integer>();
+                Long current_time = b.getLong("Milliseconds");
+                TextView milliSeconds = (TextView) findViewById(R.id.millisecondsText);
+                milliSeconds.setText(current_time.toString());
+
+                Double euler_x = b.getDouble("Euler_X");
+                TextView eulerX = (TextView) findViewById(R.id.eulerXText);
+                eulerX.setText(euler_x.toString());
+
+                Double euler_y = b.getDouble("Euler_Y");
+                TextView eulerY = (TextView) findViewById(R.id.eulerYText);
+                eulerY.setText(euler_y.toString());
+
+                Double euler_z = b.getDouble("Euler_Z");
+                TextView eulerZ = (TextView) findViewById(R.id.eulerZText);
+                eulerZ.setText(euler_z.toString());
+
+                Double gyro_x = b.getDouble("Gyro_X");
+                TextView gyroX = (TextView) findViewById(R.id.gyroXText);
+                gyroX.setText(gyro_x.toString());
+
+                Double gyro_y = b.getDouble("Gyro_Y");
+                TextView gyroY = (TextView) findViewById(R.id.gyroYText);
+                gyroY.setText(gyro_y.toString());
+
+                Double gyro_z = b.getDouble("Gyro_Z");
+                TextView gyroZ = (TextView) findViewById(R.id.gyroZText);
+                gyroZ.setText(gyro_z.toString());
+
+                Double lin_acc_x = b.getDouble("Lin_Acc_X");
+                TextView linAccX = (TextView) findViewById(R.id.linAccXText);
+                linAccX.setText(lin_acc_x.toString());
+
+                Double lin_acc_y = b.getDouble("Lin_Acc_Y");
+                TextView linAccY = (TextView) findViewById(R.id.linAccYText);
+                linAccY.setText(lin_acc_y.toString());
+
+                Double lin_acc_z = b.getDouble("Lin_Acc_Z");
+                TextView linAccZ = (TextView) findViewById(R.id.linAccZText);
+                linAccZ.setText(lin_acc_z.toString());
+
+                //Log.v("mHandler", "In handleMessage function right now " + current_time);
+
+
+            }
+        };
+
+
+
+        inputStreamIsOpen = false;
+
+        sb = new StringBuffer("");
+
+
+        ArduinoDataList = new ArrayList<String>();
 
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -688,14 +1044,18 @@ public class MainActivity extends Activity {
             if(foundOneSuccessfulConnection == true)
             {
                 Log.v("makeConnection", "Remote device info (address and uuid");
-                Log.v("makeConnection" , String.valueOf(mmSocket.getRemoteDevice().getAddress()));
+                Log.v("makeConnection", String.valueOf(mmSocket.getRemoteDevice().getAddress()));
                 Log.v("makeConnection", uuid_that_connected.toString());
                 Toast toast3 = Toast.makeText(getApplicationContext(), "Successfully connected to Device", Toast.LENGTH_SHORT);
                 toast3.show();
 
 
                 Log.v("makeConnection", "Now starting manageConnectionThreadFunction in makeConnection function");
-                manageConnectionThreadFunction(mmSocket);
+
+                //manageConnectionThreadFunction(mmSocket);  put in read button by KQS 1/11/2016
+
+
+
                 //mmSocket is now one we want
                 //connectedThread is now one we want
 
@@ -730,6 +1090,7 @@ public class MainActivity extends Activity {
 
             Log.v("manageConnectionThread", "Starting manage connection thread");
             mCT = new ManageConnectionThread(mmSocket);
+            Log.v("manageConnectionThread", "mCT set equal to new ManageConnectionThread(mmSocket)");
            // mCT.run();
            // byte[] test = {0,1,2};
            // mCT.write(test);
@@ -932,5 +1293,34 @@ public class MainActivity extends Activity {
             toast2.show();
             fromBluetooth = false;
         }
+    }
+
+    public ArrayList<String> meetsCriteriaTenComponents(String parseChunk)
+    {
+        ArrayList<String> results = new ArrayList<String>();
+
+        Log.v("meetsCriteria", "raw string = " + parseChunk);
+
+        String onlyCommasDelimiting = parseChunk.replace("$",",");
+
+        Log.v("meetsCriteria", "with commas instead = " + onlyCommasDelimiting);
+
+
+        String[] components = onlyCommasDelimiting.split(",");
+
+        Log.v("meetsCriteria", Arrays.toString(components));
+
+        if(components.length != 10)
+        {
+            return null;
+        }
+
+        for(int i = 0; i < components.length; i++)
+        {
+            results.add(components[i]);
+        }
+
+
+        return results;
     }
 }

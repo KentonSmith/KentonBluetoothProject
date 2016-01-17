@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">BluetoothAscend</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_aws__functionality__test">AWS_Functionality_Test</string>
+</resources>

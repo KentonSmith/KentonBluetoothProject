@@ -1,0 +1,330 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity">
+
+    <!--Used to have android:onClick="bluetoothstartOnClick" but have now separated functionality-->
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1.  Enable Bluetooth"
+        android:id="@+id/bluetoothEnableButton"
+        android:onClick="enableBluetoothOnClick"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text = "2. Scan for devices"
+        android:id = "@+id/scanButton"
+        android:onClick = "scanButtonOnClick"
+        android:layout_below="@+id/bluetoothEnableButton"
+        android:layout_alignEnd="@+id/bluetoothEnableButton" />
+
+    <ListView
+        android:layout_height="180dp"
+        android:layout_width="match_parent"
+        android:id="@+id/pairedDevicesList"
+
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Make Discoverable"
+        android:id="@+id/makeDiscoverable"
+        android:onClick="makeDiscoverableOnClick"
+        android:textSize="8dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignEnd="@+id/pairedDevicesList" />
+
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="To AWS Activity"
+        android:textSize="8dp"
+
+        android:id="@+id/AWS_Intent_Button"
+        android:onClick="awsIntentOnClick"
+        android:layout_below="@+id/makeDiscoverable"
+        android:layout_alignEnd="@+id/whatWasReadInButton" />
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="4. Write Test"
+        android:id="@+id/writeTestButton"
+        android:onClick="writeTestButtonOnClick"
+        android:layout_alignTop="@+id/whatWasReadInButton"
+ />
+
+    <!--
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="3. Read Test"
+        android:id="@+id/readTestButton"
+        android:onClick="readTestButtonOnClick"
+        android:layout_below="@+id/AWS_Intent_Button"
+        android:layout_alignParentStart="true" />
+-->
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="5. What was read in"
+        android:onClick="whatWasReadInButtonOnClick"
+        android:id="@+id/whatWasReadInButton"
+        android:layout_below="@+id/AWS_Intent_Button"
+        android:layout_alignParentEnd="true" />
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Clear"
+        android:id="@+id/clearButton"
+        android:textSize="9dp"
+        android:onClick="clearButtonOnClick"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@+id/makeDiscoverable" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start_Read"
+        android:id="@+id/startReadButton"
+        android:layout_below="@+id/whatWasReadInButton"
+        android:layout_alignParentStart="true"
+        android:background="#1aff1a"
+        android:onClick="startReadOnClick"
+        android:textStyle="bold" />
+
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stop_Read_And_Reset_Timer"
+        android:id="@+id/stopReadAndResetArduinoTimer"
+        android:background="#ff1a1a"
+        android:onClick="stopReadAndResetArduinoTimeOnClick"
+        android:textStyle="bold"
+        android:layout_below="@+id/whatWasReadInButton"
+        android:layout_alignEnd="@+id/whatWasReadInButton" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Milliseconds:"
+        android:textSize="12dp"
+        android:id="@+id/millisecondsLabel"
+        android:layout_marginTop="18dp"
+        android:layout_below="@+id/stopReadAndResetArduinoTimer"
+        android:layout_alignEnd="@+id/scanButton" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Euler X:"
+        android:id="@+id/eulerXLabel"
+        android:textSize="12dp"
+        android:layout_below="@+id/millisecondsLabel"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="9dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Euler Y:"
+        android:id="@+id/eulerYLabel"
+        android:textSize="12dp"
+        android:layout_alignTop="@+id/eulerXLabel"
+        android:layout_toEndOf="@+id/writeTestButton" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Euler Z:"
+        android:id="@+id/eulerZLabel"
+        android:textSize="12dp"
+        android:layout_above="@+id/gyroXLabel"
+        android:layout_alignEnd="@+id/gyroZLabel" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Gyro X:"
+        android:id="@+id/gyroXLabel"
+        android:textSize="12dp"
+        android:layout_below="@+id/eulerXLabel"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="29dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Gyro Y:"
+        android:id="@+id/gyroYLabel"
+        android:textSize="12dp"
+        android:layout_alignTop="@+id/gyroXLabel"
+        android:layout_alignEnd="@+id/eulerYLabel" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Gyro Z:"
+        android:id="@+id/gyroZLabel"
+        android:textSize="12dp"
+        android:layout_alignTop="@+id/gyroYLabel"
+        android:layout_toEndOf="@+id/clearButton" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="LinAcc X:"
+        android:id="@+id/linAccX"
+        android:textSize="12dp"
+        android:layout_below="@+id/gyroXLabel"
+        android:layout_marginTop="19dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="LinAcc Y:"
+        android:id="@+id/linAccY"
+        android:textSize="12dp"
+        android:layout_alignTop="@+id/linAccX"
+        android:layout_alignStart="@+id/eulerYLabel" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="LinAcc Z:"
+        android:id="@+id/linAccZ"
+        android:textSize="12dp"
+        android:layout_alignTop="@+id/linAccYText"
+        android:layout_alignEnd="@+id/gyroZLabel" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="&quot;           &quot;"
+        android:id="@+id/eulerXText"
+        android:textSize="12dp"
+        android:layout_alignTop="@+id/eulerXLabel"
+        android:layout_toEndOf="@+id/linAccX" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="&quot;           &quot;"
+        android:id="@+id/eulerYText"
+        android:textSize="12dp"
+        android:layout_alignTop="@+id/eulerYLabel"
+        android:layout_alignLeft="@+id/eulerYLabel"
+        android:layout_marginLeft="50dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="&quot;           &quot;"
+        android:id="@+id/eulerZText"
+        android:textSize="12dp"
+        android:layout_alignTop="@+id/eulerZLabel"
+        android:layout_alignLeft="@+id/eulerZLabel"
+        android:layout_marginLeft="50dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="&quot;             &quot;"
+        android:id="@+id/gyroXText"
+        android:textSize="12dp"
+        android:layout_above="@+id/linAccX"
+        android:layout_alignStart="@+id/eulerXText" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="&quot;            &quot;"
+        android:id="@+id/gyroYText"
+        android:layout_alignTop="@+id/gyroYLabel"
+        android:layout_toEndOf="@+id/linAccY"
+        android:textSize="12dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="&quot;            &quot;"
+        android:id="@+id/gyroZText"
+        android:textSize="12dp"
+        android:layout_alignTop="@+id/gyroYLabel"
+        android:layout_alignLeft="@+id/gyroZLabel"
+        android:layout_marginLeft="50dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="&quot;             &quot;"
+        android:id="@+id/linAccXText"
+        android:textSize="12dp"
+        android:layout_alignTop="@+id/linAccX"
+        android:layout_toStartOf="@+id/millisecondsLabel" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="&quot;            &quot;"
+        android:id="@+id/linAccYText"
+        android:textSize="12dp"
+        android:layout_alignTop="@+id/linAccY"
+        android:layout_toEndOf="@+id/millisecondsLabel" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="&quot;            &quot;"
+        android:id="@+id/linAccZText"
+        android:textSize="12dp"
+        android:layout_alignTop="@+id/linAccZ"
+        android:layout_alignLeft="@+id/linAccZ"
+        android:layout_marginLeft="50dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="&quot;             &quot;"
+        android:id="@+id/millisecondsText"
+        android:textSize="12dp"
+        android:layout_alignTop="@+id/millisecondsLabel"
+        android:layout_toStartOf="@+id/eulerZLabel" />
+
+
+</RelativeLayout>
