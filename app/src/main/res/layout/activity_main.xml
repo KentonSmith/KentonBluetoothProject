@@ -54,16 +54,6 @@
         android:layout_below="@+id/makeDiscoverable"
         android:layout_alignEnd="@+id/whatWasReadInButton" />
 
-    <Button
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="4. Write Test"
-        android:id="@+id/writeTestButton"
-        android:onClick="writeTestButtonOnClick"
-        android:layout_alignTop="@+id/whatWasReadInButton"
- />
-
     <!--
     <Button
         style="?android:attr/buttonStyleSmall"
@@ -149,7 +139,7 @@
         android:id="@+id/eulerYLabel"
         android:textSize="12dp"
         android:layout_alignTop="@+id/eulerXLabel"
-        android:layout_toEndOf="@+id/writeTestButton" />
+        android:layout_marginLeft="90dp"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -220,7 +210,7 @@
         android:id="@+id/linAccZ"
         android:textSize="12dp"
         android:layout_alignTop="@+id/linAccYText"
-        android:layout_alignEnd="@+id/gyroZLabel" />
+        android:layout_alignLeft="@+id/gyroZLabel" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -293,7 +283,8 @@
         android:id="@+id/linAccXText"
         android:textSize="12dp"
         android:layout_alignTop="@+id/linAccX"
-        android:layout_toStartOf="@+id/millisecondsLabel" />
+        android:layout_alignLeft="@+id/linAccX"
+        android:layout_marginLeft="60dp"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -303,7 +294,8 @@
         android:id="@+id/linAccYText"
         android:textSize="12dp"
         android:layout_alignTop="@+id/linAccY"
-        android:layout_toEndOf="@+id/millisecondsLabel" />
+        android:layout_alignLeft="@+id/linAccY"
+        android:layout_marginLeft="60dp"/>
 
     <TextView
         android:layout_width="wrap_content"

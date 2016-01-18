@@ -39,19 +39,19 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
-
 public class MainActivity extends Activity {
+
 
     private final static int REQUEST_ENABLE_BT = 1;
     private boolean fromBluetooth = false;
     private BluetoothAdapter mBluetoothAdapter;
     private ArrayAdapter mArrayAdapter;
     private static Handler mHandler;
-    private boolean inputStreamIsOpen;
+    private Boolean inputStreamIsOpen;
     private ListView lv;
 
     //KQS_TO_DO_11_26_PM
-    private boolean foundOneSuccessfulConnection = false;
+    private Boolean foundOneSuccessfulConnection = false;
 
     //Sony Vaio Laptop mac address "C4:85:08:53:E7:5A"
     //Kenton PC mac address: "00:26:83:32:DA:F8"
@@ -101,10 +101,7 @@ public class MainActivity extends Activity {
 
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
-
-
         }
-
 
         //http://stackoverflow.com/questions/12294705/error-in-reading-data-from-inputstream-in-bluetooth-on-android
         public void run() {
@@ -120,7 +117,8 @@ public class MainActivity extends Activity {
                         throw new IOException("Stop button was pressed");
                     }
 
-                    if (inputStreamIsOpen == true && mmInStream.available() > 0) {
+                    //KQSNEWComment
+                    if (inputStreamIsOpen.booleanValue() == true && mmInStream.available() > 0) {
                         try {
                             // Read from the InputStream
                             bytes = mmInStream.read(buffer);
@@ -144,9 +142,7 @@ public class MainActivity extends Activity {
                                 parseableChunk = "";
                             }
 
-
                             //Log.v("ManageConnectionThread", "Current parseableChunk = " + parseableChunk);
-
 
                             //DO THIS TO HAVE tenComponents keep up with bluetooth data streaming in
                             while(meetsCriteriaTenComponents(parseableChunk) != null)  //tenComponents is passed in as reference and will be assigned to results of parsing
@@ -194,12 +190,7 @@ public class MainActivity extends Activity {
                                 {
                                     parseableChunk = "";
                                 }
-
-
                             }
-
-
-
 
                             //ArduinoDataList.add(readMessage);             //KQS 12/30/2015 NEED MUTEX SINCE TWO THREADS USE THIS
 
@@ -219,11 +210,8 @@ public class MainActivity extends Activity {
 
                     break;
                 }
-
             }
-
         }
-
 
         /* Call this from the main activity to send data to the remote device */
 
@@ -231,17 +219,12 @@ public class MainActivity extends Activity {
         {
             try {
                 Log.v("ManageConnectionThread", "try block for write method is called inside manage connection thread");
-
-
-
                 mmOutStream.write(i);
                 Log.v("ManageConnectionThread", "mmOutStream.writes(" + i + ") was successful");
-
                 // mmOutStream.close();
             } catch (IOException e) {
                 Log.v("ManageConnectionThread", "mmOutStream.writes(" + i + ") FAILED.  Now printing error");
                 Log.v("ManageConnectionThread", e.toString());
-
             }
         }
 
@@ -258,12 +241,10 @@ public class MainActivity extends Activity {
                 mmOutStream.flush();  //clear out any garbage from last time
                 mmOutStream.flush();  //clear out any garbage from last time
 
-
                 // mmOutStream.close();
             } catch (IOException e) {
                 Log.v("ManageConnectionThread", "mmOutStream.writes(" + Arrays.toString(bytes) + ") FAILED.  Now printing error");
                 Log.v("ManageConnectionThread", e.toString());
-
             }
         }
 
@@ -281,19 +262,15 @@ public class MainActivity extends Activity {
                 //mmOutStream = null;
 
                 //mmSocket.close();  //Use to be uncommented 1/11/2016
-
-
             } catch (IOException e) { }
         }
     }
 
+
+    // KQSNewcomment
+
     private class ConnectThread extends Thread {
         private BluetoothDevice mmDevice;
-
-        public void shortCutConnect()
-        {
-            makeConnection();
-        }
 
         public ConnectThread(BluetoothDevice device, String uuid_string) {
             // Use a temporary object that is later assigned to mmSocket,
@@ -304,7 +281,6 @@ public class MainActivity extends Activity {
             // Get a BluetoothSocket to connect with the given BluetoothDevice
             try {
                 // MY_UUID is the app's UUID string, also used by the server code
-
 
                 //Tried connecting insecure and secure KQS_TO_DO
                  UUID my_uuid = UUID.fromString(uuid_string);
@@ -331,7 +307,6 @@ public class MainActivity extends Activity {
                 Log.v("ConnectThread", "mmSocket.isConnected? " + mmSocket.isConnected());
                 Log.v("ConnectThread", "mmSocket.connect() successful run() method inside thread");
 
-
                 //don't look for any more
                 foundOneSuccessfulConnection = true;
 
@@ -340,9 +315,7 @@ public class MainActivity extends Activity {
 
                 //Now begin manage connection thread
 
-
             } catch (IOException connectException) {
-
 
                 Log.v("ConnectThread", "mmSocket.connect() failed in run() of thread");
                 Log.v("ConnectThread", "connectException.toString() = " + connectException.toString());
@@ -361,22 +334,17 @@ public class MainActivity extends Activity {
                 return;
             }
 
-            // Do work to manage the connection (in a separate thread)
-
-            //KQS_TO_DO
-            //manageConnectedSocket(mmSocket);
         }
 
-
-
-
-        /** Will cancel an in-progress connection, and close the socket */
+        //Will cancel an in-progress connection, and close the socket
         public void cancel() {
             try {
                 mmSocket.close();
             } catch (IOException e) { }
         }
     }
+
+
 
     public void whatWasReadInButtonOnClick(View v)
     {
@@ -541,49 +509,7 @@ public class MainActivity extends Activity {
     }
 
 
-    public void writeTestButtonOnClick(View v)
-    {
-        Log.v("writeTestButtonOnClick", "At beginning writeTestButtonOnClick");
-        Toast toast3 = Toast.makeText(getApplicationContext(), "Write Test Button Pressed", Toast.LENGTH_SHORT);
-        toast3.show();
-
-        //BigInteger test = new BigInteger("3");
-
-       // byte[] myByteTest = {1,2,3,4,5,6,7,8}; //'a', 'b', 'c', 'd'
-
-        //int send_to_arduino = 7;
-
-        if(mCT != null)
-        {
-           // byte[] temp = new byte[1];
-           // temp[0] = 56;
-           // mCT.writeByteArray(temp);
-
-
-
-            byte[] temp2 = new byte[1];
-            temp2[0] = 97;
-            mCT.writeByteArray(temp2);
-
-            Toast toast4 = Toast.makeText(getApplicationContext(), "writeTestButtonOnClick ", Toast.LENGTH_SHORT);
-            toast4.show();
-            Log.v("writeTestButtonOnClick", "Writing in  writeTestButtonOnClick");
-
-
-            //size 2
-
-
-
-        } else
-        {
-            Toast toast4 = Toast.makeText(getApplicationContext(), "mCT is null.  Not writing anything", Toast.LENGTH_SHORT);
-            toast4.show();
-            Log.v("writeTestButtonOnClick", "mCT is null.  Not writing anything");
-        }
-
-    }
-
-    private MainActivity.ConnectThread connectedThread;
+    private ConnectThread connectedThread;
 
 
     public void awsIntentOnClick(View v)
@@ -620,63 +546,11 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mHandler = new Handler(){
-            @Override
-            public void handleMessage(Message msg) {
-                Bundle b = msg.getData();
-
-                Long current_time = b.getLong("Milliseconds");
-                TextView milliSeconds = (TextView) findViewById(R.id.millisecondsText);
-                milliSeconds.setText(current_time.toString());
-
-                Double euler_x = b.getDouble("Euler_X");
-                TextView eulerX = (TextView) findViewById(R.id.eulerXText);
-                eulerX.setText(euler_x.toString());
-
-                Double euler_y = b.getDouble("Euler_Y");
-                TextView eulerY = (TextView) findViewById(R.id.eulerYText);
-                eulerY.setText(euler_y.toString());
-
-                Double euler_z = b.getDouble("Euler_Z");
-                TextView eulerZ = (TextView) findViewById(R.id.eulerZText);
-                eulerZ.setText(euler_z.toString());
-
-                Double gyro_x = b.getDouble("Gyro_X");
-                TextView gyroX = (TextView) findViewById(R.id.gyroXText);
-                gyroX.setText(gyro_x.toString());
-
-                Double gyro_y = b.getDouble("Gyro_Y");
-                TextView gyroY = (TextView) findViewById(R.id.gyroYText);
-                gyroY.setText(gyro_y.toString());
-
-                Double gyro_z = b.getDouble("Gyro_Z");
-                TextView gyroZ = (TextView) findViewById(R.id.gyroZText);
-                gyroZ.setText(gyro_z.toString());
-
-                Double lin_acc_x = b.getDouble("Lin_Acc_X");
-                TextView linAccX = (TextView) findViewById(R.id.linAccXText);
-                linAccX.setText(lin_acc_x.toString());
-
-                Double lin_acc_y = b.getDouble("Lin_Acc_Y");
-                TextView linAccY = (TextView) findViewById(R.id.linAccYText);
-                linAccY.setText(lin_acc_y.toString());
-
-                Double lin_acc_z = b.getDouble("Lin_Acc_Z");
-                TextView linAccZ = (TextView) findViewById(R.id.linAccZText);
-                linAccZ.setText(lin_acc_z.toString());
-
-                //Log.v("mHandler", "In handleMessage function right now " + current_time);
-
-
-            }
-        };
-
-
+        mHandler = new AdafruitDataHandler(this);
 
         inputStreamIsOpen = false;
 
         sb = new StringBuffer("");
-
 
         ArduinoDataList = new ArrayList<String>();
 
@@ -710,7 +584,6 @@ public class MainActivity extends Activity {
 
                     Log.v("mReceiver", device.getAddress());
                     myDevices.add(device);
-
 
                     /*
                     if(device.getAddress().equals(MAC_ADDRESS_WE_WANT))
@@ -754,12 +627,9 @@ public class MainActivity extends Activity {
                                 Log.v("uuidReceiver","Match found in loop");
 
                             }
-
                         }
 
                         Log.v("uuidReceiver", "Calling makeConnection from uuidReceiveer.  In future will loop through all UUIDS");
-
-
                        // makeConnection();  SAVE THIS FOR LATER
                     }
                 }
@@ -868,21 +738,13 @@ public class MainActivity extends Activity {
 
     }
 
-
     public void makeConnection()
     {
-
-        /*
-        Toast toast3 = Toast.makeText(getApplicationContext(), "In Main Connection Function", Toast.LENGTH_SHORT);
-        toast3.show();
-        */
-
         Log.v("makeConnection", "Beginning makeConnection");
 
         mBluetoothAdapter.cancelDiscovery();
 
         Log.v("makeConnection", "uuid_list.size() = " + uuid_list.size());
-
 
         if(uuid_list.size() == 0)
         {
@@ -892,6 +754,8 @@ public class MainActivity extends Activity {
 
         Log.v("makeConnection", uuid_list.toString());
 
+       // BooleanWrapper booleanWrapper = new BooleanWrapper(false);
+
         if(uuid_list.size() > 0)
         {
 
@@ -899,13 +763,16 @@ public class MainActivity extends Activity {
             {
                 Log.v("makeConnection", "Trying UUID: " + uuid_list.get(i) + " in thread");
 
-                if(foundOneSuccessfulConnection != true)
+                if(foundOneSuccessfulConnection.booleanValue() !=  true)
                 {
-                    connectedThread = new ConnectThread(mainDevice, uuid_list.get(i));
+                    // booleanWrapper = new BooleanWrapper(false);
+                    //connectedThread = new ConnectThread(mainDevice, uuid_list.get(i), uuid_that_connected, mmSocket, mBluetoothAdapter, booleanWrapper);
+                    connectedThread = new ConnectThread(mainDevice, uuid_list.get(i)); //KQSNewComment
                     connectedThread.run();
                 }
-
             }
+
+           // foundOneSuccessfulConnection = booleanWrapper.val;
 
             //Print into about mmSocket and UUID about device we connected to
             if(foundOneSuccessfulConnection == true)
@@ -921,8 +788,6 @@ public class MainActivity extends Activity {
 
                 //manageConnectionThreadFunction(mmSocket);  put in read button by KQS 1/11/2016
 
-
-
                 //mmSocket is now one we want
                 //connectedThread is now one we want
 
@@ -937,15 +802,6 @@ public class MainActivity extends Activity {
                 toast3.show();
             }
         }
-
-
-
-
-        /*
-
-*/
-
-
     }
 
     public void manageConnectionThreadFunction(BluetoothSocket socket)
@@ -961,11 +817,7 @@ public class MainActivity extends Activity {
            // mCT.run();
            // byte[] test = {0,1,2};
            // mCT.write(test);
-
         }
-
-
-
     }
 
     public BluetoothDevice findDeviceUserClickedOn(ArrayList<BluetoothDevice> btlist, String address)
@@ -977,10 +829,8 @@ public class MainActivity extends Activity {
                 return btlist.get(i);
             }
         }
-
         return null;
     }
-
 
 
     public void scanButtonOnClick(View view)
@@ -1027,7 +877,6 @@ public class MainActivity extends Activity {
 
                     final String mac_address_will_attempt_to_connect_to = Info_Split_Into_Array[1];
                     Log.v("scanButtonOnClick", mac_address_will_attempt_to_connect_to);
-
 
                     //DIALOG STUFF
 
@@ -1082,13 +931,6 @@ public class MainActivity extends Activity {
             toast5.show();
         }
     }
-
-
-
-    public void getAllBluetoothSocketInfo(BluetoothSocket somesocket)
-    {
-    }
-
 
     //Inputs: This device takes in a BluetoothDevice object
     //Ouputs: This function does nothing but sideeffects.  It prints out all related .toString() values of
@@ -1172,7 +1014,6 @@ public class MainActivity extends Activity {
 
         Log.v("meetsCriteria", "with commas instead = " + onlyCommasDelimiting);
 
-
         String[] components = onlyCommasDelimiting.split(",");
 
         Log.v("meetsCriteria", Arrays.toString(components));
@@ -1186,7 +1027,6 @@ public class MainActivity extends Activity {
         {
             results.add(components[i]);
         }
-
 
         return results;
     }
