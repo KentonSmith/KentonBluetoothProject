@@ -13,7 +13,8 @@
         android:id="@+id/bluetoothEnableButton"
         android:onClick="enableBluetoothOnClick"
         android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:textSize="8dp" />
 
     <Button
         android:layout_width="wrap_content"
@@ -21,38 +22,18 @@
         android:text = "2. Scan for devices"
         android:id = "@+id/scanButton"
         android:onClick = "scanButtonOnClick"
-        android:layout_below="@+id/bluetoothEnableButton"
-        android:layout_alignEnd="@+id/bluetoothEnableButton" />
+        android:textSize="10dp"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@+id/eulerYText" />
 
     <ListView
-        android:layout_height="180dp"
+        android:layout_height="210dp"
         android:layout_width="match_parent"
         android:id="@+id/pairedDevicesList"
 
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Make Discoverable"
-        android:id="@+id/makeDiscoverable"
-        android:onClick="makeDiscoverableOnClick"
-        android:textSize="8dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignEnd="@+id/pairedDevicesList" />
-
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="To AWS Activity"
-        android:textSize="8dp"
-
-        android:id="@+id/AWS_Intent_Button"
-        android:onClick="awsIntentOnClick"
-        android:layout_below="@+id/makeDiscoverable"
-        android:layout_alignEnd="@+id/whatWasReadInButton" />
 
     <!--
     <Button
@@ -72,8 +53,10 @@
         android:text="5. What was read in"
         android:onClick="whatWasReadInButtonOnClick"
         android:id="@+id/whatWasReadInButton"
-        android:layout_below="@+id/AWS_Intent_Button"
-        android:layout_alignParentEnd="true" />
+        android:textSize="10dp"
+        android:layout_alignParentTop="true"
+        android:layout_toEndOf="@+id/linAccY"
+        android:layout_marginStart="27dp" />
 
     <Button
         style="?android:attr/buttonStyleSmall"
@@ -83,8 +66,8 @@
         android:id="@+id/clearButton"
         android:textSize="9dp"
         android:onClick="clearButtonOnClick"
-        android:layout_alignParentTop="true"
-        android:layout_toStartOf="@+id/makeDiscoverable" />
+        android:layout_below="@+id/bluetoothEnableButton"
+        android:layout_toStartOf="@+id/gyroXLabel" />
 
     <Button
         android:layout_width="wrap_content"
@@ -95,7 +78,8 @@
         android:layout_alignParentStart="true"
         android:background="#1aff1a"
         android:onClick="startReadOnClick"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:textSize="12dp" />
 
 
     <Button
@@ -107,18 +91,19 @@
         android:onClick="stopReadAndResetArduinoTimeOnClick"
         android:textStyle="bold"
         android:layout_below="@+id/whatWasReadInButton"
-        android:layout_alignEnd="@+id/whatWasReadInButton" />
+        android:layout_alignEnd="@+id/whatWasReadInButton"
+        android:textSize="12dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="Milliseconds:"
-        android:textSize="12dp"
+        android:textSize="16dp"
         android:id="@+id/millisecondsLabel"
-        android:layout_marginTop="18dp"
-        android:layout_below="@+id/stopReadAndResetArduinoTimer"
-        android:layout_alignEnd="@+id/scanButton" />
+        android:layout_marginTop="21dp"
+        android:layout_below="@+id/startReadButton"
+        android:layout_toStartOf="@+id/stopReadAndResetArduinoTimer" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -126,7 +111,7 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="Euler X:"
         android:id="@+id/eulerXLabel"
-        android:textSize="12dp"
+        android:textSize="16dp"
         android:layout_below="@+id/millisecondsLabel"
         android:layout_alignParentStart="true"
         android:layout_marginTop="9dp" />
@@ -137,9 +122,10 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="Euler Y:"
         android:id="@+id/eulerYLabel"
-        android:textSize="12dp"
+        android:textSize="16dp"
+        android:layout_marginLeft="90dp"
         android:layout_alignTop="@+id/eulerXLabel"
-        android:layout_marginLeft="90dp"/>
+        android:layout_centerHorizontal="true" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -147,20 +133,10 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="Euler Z:"
         android:id="@+id/eulerZLabel"
-        android:textSize="12dp"
-        android:layout_above="@+id/gyroXLabel"
-        android:layout_alignEnd="@+id/gyroZLabel" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="Gyro X:"
-        android:id="@+id/gyroXLabel"
-        android:textSize="12dp"
+        android:textSize="16dp"
         android:layout_below="@+id/eulerXLabel"
         android:layout_alignParentStart="true"
-        android:layout_marginTop="29dp" />
+        android:layout_marginTop="18dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -168,9 +144,10 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="Gyro Y:"
         android:id="@+id/gyroYLabel"
-        android:textSize="12dp"
-        android:layout_alignTop="@+id/gyroXLabel"
-        android:layout_alignEnd="@+id/eulerYLabel" />
+        android:textSize="16dp"
+        android:layout_below="@+id/eulerZLabel"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="19dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -178,9 +155,9 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="Gyro Z:"
         android:id="@+id/gyroZLabel"
-        android:textSize="12dp"
+        android:textSize="16dp"
         android:layout_alignTop="@+id/gyroYLabel"
-        android:layout_toEndOf="@+id/clearButton" />
+        android:layout_alignStart="@+id/eulerYLabel" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -188,9 +165,9 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="LinAcc X:"
         android:id="@+id/linAccX"
-        android:textSize="12dp"
-        android:layout_below="@+id/gyroXLabel"
-        android:layout_marginTop="19dp" />
+        android:textSize="16dp"
+        android:layout_marginTop="19dp"
+        android:layout_below="@+id/gyroZText" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -198,9 +175,10 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="LinAcc Y:"
         android:id="@+id/linAccY"
-        android:textSize="12dp"
+        android:textSize="16dp"
         android:layout_alignTop="@+id/linAccX"
-        android:layout_alignStart="@+id/eulerYLabel" />
+        android:layout_alignStart="@+id/gyroXLabel"
+        android:layout_marginStart="27dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -208,9 +186,10 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="LinAcc Z:"
         android:id="@+id/linAccZ"
-        android:textSize="12dp"
-        android:layout_alignTop="@+id/linAccYText"
-        android:layout_alignLeft="@+id/gyroZLabel" />
+        android:textSize="16dp"
+        android:layout_alignBaseline="@+id/linAccZText"
+        android:layout_alignBottom="@+id/linAccZText"
+        android:layout_alignParentStart="true" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -218,8 +197,8 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="&quot;           &quot;"
         android:id="@+id/eulerXText"
-        android:textSize="12dp"
-        android:layout_alignTop="@+id/eulerXLabel"
+        android:textSize="16dp"
+        android:layout_above="@+id/eulerZLabel"
         android:layout_toEndOf="@+id/linAccX" />
 
     <TextView
@@ -228,10 +207,10 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="&quot;           &quot;"
         android:id="@+id/eulerYText"
-        android:textSize="12dp"
-        android:layout_alignTop="@+id/eulerYLabel"
-        android:layout_alignLeft="@+id/eulerYLabel"
-        android:layout_marginLeft="50dp" />
+        android:textSize="16dp"
+        android:layout_marginLeft="25dp"
+        android:layout_above="@+id/eulerZLabel"
+        android:layout_alignStart="@+id/whatWasReadInButton" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -239,20 +218,11 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="&quot;           &quot;"
         android:id="@+id/eulerZText"
-        android:textSize="12dp"
+        android:textSize="16dp"
+        android:layout_marginLeft="50dp"
         android:layout_alignTop="@+id/eulerZLabel"
-        android:layout_alignLeft="@+id/eulerZLabel"
-        android:layout_marginLeft="50dp"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="&quot;             &quot;"
-        android:id="@+id/gyroXText"
-        android:textSize="12dp"
-        android:layout_above="@+id/linAccX"
-        android:layout_alignStart="@+id/eulerXText" />
+        android:layout_toStartOf="@+id/linAccZText"
+        android:layout_alignEnd="@+id/gyroYText" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -260,9 +230,10 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="&quot;            &quot;"
         android:id="@+id/gyroYText"
-        android:layout_alignTop="@+id/gyroYLabel"
-        android:layout_toEndOf="@+id/linAccY"
-        android:textSize="12dp" />
+        android:textSize="16dp"
+        android:layout_above="@+id/linAccX"
+        android:layout_alignEnd="@+id/linAccZText"
+        android:layout_toEndOf="@+id/eulerXLabel" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -270,10 +241,10 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="&quot;            &quot;"
         android:id="@+id/gyroZText"
-        android:textSize="12dp"
-        android:layout_alignTop="@+id/gyroYLabel"
-        android:layout_alignLeft="@+id/gyroZLabel"
-        android:layout_marginLeft="50dp"/>
+        android:textSize="16dp"
+        android:layout_marginLeft="25dp"
+        android:layout_alignTop="@+id/gyroZLabel"
+        android:layout_toEndOf="@+id/linAccY" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -281,21 +252,22 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="&quot;             &quot;"
         android:id="@+id/linAccXText"
-        android:textSize="12dp"
-        android:layout_alignTop="@+id/linAccX"
-        android:layout_alignLeft="@+id/linAccX"
-        android:layout_marginLeft="60dp"/>
+        android:textSize="16dp"
+        android:layout_marginLeft="40dp"
+        android:layout_above="@+id/linAccZText"
+        android:layout_alignEnd="@+id/linAccZText" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="&quot;            &quot;"
+        android:text="&quot;               &quot;"
         android:id="@+id/linAccYText"
-        android:textSize="12dp"
+        android:textSize="16dp"
+        android:layout_marginLeft="20dp"
         android:layout_alignTop="@+id/linAccY"
-        android:layout_alignLeft="@+id/linAccY"
-        android:layout_marginLeft="60dp"/>
+        android:layout_alignEnd="@+id/eulerYText"
+        android:layout_toEndOf="@+id/linAccY" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -303,10 +275,10 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="&quot;            &quot;"
         android:id="@+id/linAccZText"
-        android:textSize="12dp"
-        android:layout_alignTop="@+id/linAccZ"
-        android:layout_alignLeft="@+id/linAccZ"
-        android:layout_marginLeft="50dp"/>
+        android:textSize="16dp"
+        android:layout_marginTop="23dp"
+        android:layout_below="@+id/linAccY"
+        android:layout_toEndOf="@+id/startReadButton" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -314,9 +286,29 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="&quot;             &quot;"
         android:id="@+id/millisecondsText"
-        android:textSize="12dp"
+        android:textSize="16dp"
         android:layout_alignTop="@+id/millisecondsLabel"
-        android:layout_alignStart="@+id/linAccZ" />
+        android:layout_toStartOf="@+id/eulerYText" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Gryo X:"
+        android:id="@+id/gyroXLabel"
+        android:textSize="16dp"
+        android:layout_alignTop="@+id/eulerZText"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="&quot;             &quot;"
+        android:id="@+id/gyroXText"
+        android:layout_above="@+id/gyroYLabel"
+        android:layout_toEndOf="@+id/scanButton"
+        android:textSize="16dp" />
 
 
 </RelativeLayout>

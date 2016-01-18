@@ -140,16 +140,6 @@ public class MainActivity extends Activity {
                 return; // exit out of function, we are already reading
             }
 
-
-            //DIALOG STUFF
-
-            /*
-            if(mmSocket == null)
-            {
-                connectedThread.shortCutConnect();
-            }
-*/
-
             AlertDialog.Builder mDialog = new AlertDialog.Builder(MainActivity.this);
             mDialog.setTitle("Is There Incoming Data?");
             mDialog.setMessage("Confirm That Arduino Is Sending Data.\nIf not, app will crash");
@@ -193,9 +183,6 @@ public class MainActivity extends Activity {
             alert.show();
 
         }
-
-
-
     }
 
     public void stopReadAndResetArduinoTimeOnClick(View v)
@@ -228,48 +215,21 @@ public class MainActivity extends Activity {
 
             Log.v("stopReadOnClick", "Current thread state = " + mCT.getState().toString());
 
-
 //            mCT = null;
-
-
-
         }
-
     }
 
-
     //private ConnectThread connectedThread;
-
     private ConnectThread2 connectThread2;
 
+    /*
     public void awsIntentOnClick(View v)
     {
         Intent intent = new Intent(this, AWS_Functionality_Test.class);
         startActivity(intent);
 
     }
-
-    public void makeDiscoverableOnClick(View v)
-    {
-
-        Toast toast3 = Toast.makeText(getApplicationContext(), "Make Discoverable Button Clicked)", Toast.LENGTH_SHORT);
-        toast3.show();
-        Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
-        startActivity(discoverableIntent);
-
-    }
-
-    /*
-    public void sendDataOnClick(View v)
-    {
-        EditText text = (EditText) findViewById(R.id.sendDataEditText);
-        Toast toast3 = Toast.makeText(getApplicationContext(), "Planning on sending bytes " + text.getText().toString(), Toast.LENGTH_SHORT);
-        toast3.show();
-        Log.v("onActivityResult", "sending bytes = " + text.getText().toString());
-    }
     */
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -426,7 +386,6 @@ public class MainActivity extends Activity {
         mArrayAdapter.notifyDataSetChanged();
     }
 
-
     public void enableBluetoothOnClick(View view)
     {
         Log.v("enableBluetoothOnClick", "Inside enableBluetoothOnClick");
@@ -465,7 +424,6 @@ public class MainActivity extends Activity {
                 Log.v("enableBluetoothOnClick", "ScanBluetooth being called in case where bluetooth already is enabled");
             }
         }
-
     }
 
     public void makeConnection()
@@ -579,7 +537,6 @@ public class MainActivity extends Activity {
         return null;
     }
 
-
     public void scanButtonOnClick(View view)
     {
         Toast toast2 = Toast.makeText(getApplicationContext(), "Scan bluetooth being called", Toast.LENGTH_SHORT);
@@ -656,7 +613,6 @@ public class MainActivity extends Activity {
                                 toast6.show();
                                 //TOAST HERE
                             }
-
                         }
                     });
                     mDialog.setNegativeButton("NO", new DialogInterface.OnClickListener() {
@@ -667,7 +623,6 @@ public class MainActivity extends Activity {
                     });
                     AlertDialog alert = mDialog.create();
                     alert.show();
-
                 }
             });
         }
@@ -721,7 +676,6 @@ public class MainActivity extends Activity {
         Log.v("getAllBTDeviceInfo", "End getAllBluetoothDeviceInfo ");
     }
 
-
     //Inputs: An intent received from a different function (most notably, enableBluetoothOnClick())
     //Ouputs: User enabling bluetooth or not
     @Override
@@ -750,5 +704,4 @@ public class MainActivity extends Activity {
             fromBluetooth = false;
         }
     }
-
 }
