@@ -46,8 +46,8 @@ public class MainActivity extends Activity {
     private boolean fromBluetooth = false;
     private BluetoothAdapter mBluetoothAdapter;
     private ArrayAdapter mArrayAdapter;
-    private static Handler mHandler;
-    private Boolean inputStreamIsOpen;
+    private static AdafruitDataHandler mHandler;
+    private BooleanWrapper inputStreamIsOpen;
     private ListView lv;
 
     //KQS_TO_DO_11_26_PM
@@ -77,275 +77,6 @@ public class MainActivity extends Activity {
     private ArrayList<BluetoothDevice> myDevices;
     private ArrayList<String> uuid_list;
 
-
-    private class ManageConnectionThread extends Thread {
-        //private final BluetoothSocket mmSocket;
-        private InputStream mmInStream;
-        private OutputStream mmOutStream;
-
-       // private final InputStream mmInStream;
-       // private final OutputStream mmOutStream;
-
-        public ManageConnectionThread(BluetoothSocket socket) {
-            mmSocket = socket;
-            InputStream tmpIn = null;
-            OutputStream tmpOut = null;
-
-            // Get the input and output streams, using temp objects because
-            // member streams are final
-            try {
-                tmpIn = socket.getInputStream();
-                tmpOut = socket.getOutputStream();
-            } catch (IOException e) {
-            }
-
-            mmInStream = tmpIn;
-            mmOutStream = tmpOut;
-        }
-
-        //http://stackoverflow.com/questions/12294705/error-in-reading-data-from-inputstream-in-bluetooth-on-android
-        public void run() {
-            while (true) {
-                try {
-                    byte[] buffer = new byte[128];
-                    String readMessage;
-                    int bytes;
-
-                    if(mmInStream == null)
-                    {
-                        Log.v("ManageConnectionThread", "mmInStream is null after being stopped now throwing exception to try and break out of thread");
-                        throw new IOException("Stop button was pressed");
-                    }
-
-                    //KQSNEWComment
-                    if (inputStreamIsOpen.booleanValue() == true && mmInStream.available() > 0) {
-                        try {
-                            // Read from the InputStream
-                            bytes = mmInStream.read(buffer);
-                            readMessage = new String(buffer, 0, bytes);
-                            Log.v("ManageConnectionThread", readMessage);
-
-                            //lock
-                            sb.append(readMessage);  //shared data with main UI thread
-                            //unlock
-                           String tempString = sb.toString();
-
-                            int firstAmpersandIndex = tempString.indexOf('&');
-
-                            String parseableChunk = "";
-                            try
-                            {
-                                parseableChunk = tempString.substring(0, firstAmpersandIndex);
-                            }
-                            catch(StringIndexOutOfBoundsException e)  //case where there is no ampersand in remaining string
-                            {
-                                parseableChunk = "";
-                            }
-
-                            //Log.v("ManageConnectionThread", "Current parseableChunk = " + parseableChunk);
-
-                            //DO THIS TO HAVE tenComponents keep up with bluetooth data streaming in
-                            while(meetsCriteriaTenComponents(parseableChunk) != null)  //tenComponents is passed in as reference and will be assigned to results of parsing
-                            {
-                                //send to main chunk handler in bundle, remove first chunk from string, reassign stringbuilder
-
-                              //  Log.v("ManageConnectionThread", "sb before removing chunk = " + sb.toString());
-
-                                ArrayList<String> tenComponents = meetsCriteriaTenComponents(parseableChunk);
-                                Log.v("ManageConnectionThread", "Ten components = " + tenComponents);
-
-                                Message m = new Message();
-                                Bundle b = new Bundle();
-
-                                b.putLong("Milliseconds", Long.valueOf(tenComponents.get(0)));
-
-                                b.putDouble("Euler_X", Double.valueOf(tenComponents.get(1)));
-                                b.putDouble("Euler_Y", Double.valueOf(tenComponents.get(2)));
-                                b.putDouble("Euler_Z", Double.valueOf(tenComponents.get(3)));
-
-                                b.putDouble("Gyro_X", Double.valueOf(tenComponents.get(4)));
-                                b.putDouble("Gyro_Y", Double.valueOf(tenComponents.get(5)));
-                                b.putDouble("Gyro_Z", Double.valueOf(tenComponents.get(6)));
-
-                                b.putDouble("Lin_Acc_X", Double.valueOf(tenComponents.get(7)));
-                                b.putDouble("Lin_Acc_Y", Double.valueOf(tenComponents.get(8)));
-                                b.putDouble("Lin_Acc_Z", Double.valueOf(tenComponents.get(9)));
-
-                                m.setData(b);
-
-                                sb = new StringBuffer(tempString.substring(firstAmpersandIndex + 1, tempString.length()));
-                              //  Log.v("ManageConnectionThread", "sb after removing chunk = " + sb.toString());
-
-                                mHandler.sendMessage(m);  //neeed to add code to update UI
-
-                                tempString = sb.toString();
-
-                                firstAmpersandIndex = tempString.indexOf('&');
-
-                                try
-                                {
-                                    parseableChunk = tempString.substring(0, firstAmpersandIndex);
-                                }
-                                catch(StringIndexOutOfBoundsException e)  //case where there is no ampersand in remaining string
-                                {
-                                    parseableChunk = "";
-                                }
-                            }
-
-                            //ArduinoDataList.add(readMessage);             //KQS 12/30/2015 NEED MUTEX SINCE TWO THREADS USE THIS
-
-                        } catch (IOException e) {
-                            Log.v("ManageConnectionThread", "disconnected");
-                            break;
-                        }
-                        // Send the obtained bytes to the UI Activity
-
-                    } else {
-                        SystemClock.sleep(100);
-                    }
-                } catch (IOException e) {
-
-                    e.printStackTrace();
-                    Log.v("ManageConnectionThread", "Breaking out of while loop for reading");
-
-                    break;
-                }
-            }
-        }
-
-        /* Call this from the main activity to send data to the remote device */
-
-        public void writeInt(int i)
-        {
-            try {
-                Log.v("ManageConnectionThread", "try block for write method is called inside manage connection thread");
-                mmOutStream.write(i);
-                Log.v("ManageConnectionThread", "mmOutStream.writes(" + i + ") was successful");
-                // mmOutStream.close();
-            } catch (IOException e) {
-                Log.v("ManageConnectionThread", "mmOutStream.writes(" + i + ") FAILED.  Now printing error");
-                Log.v("ManageConnectionThread", e.toString());
-            }
-        }
-
-        public void writeByteArray(byte[] bytes) {
-            try {
-                Log.v("ManageConnectionThread", "try block for write method is called inside manage connection thread");
-
-                mmOutStream.flush();  //clear out any garbage from last time
-                mmOutStream.flush();  //clear out any garbage from last time
-
-                mmOutStream.write(bytes);
-                Log.v("ManageConnectionThread", "mmOutStream.writes(" + Arrays.toString(bytes) + ") was successful");
-
-                mmOutStream.flush();  //clear out any garbage from last time
-                mmOutStream.flush();  //clear out any garbage from last time
-
-                // mmOutStream.close();
-            } catch (IOException e) {
-                Log.v("ManageConnectionThread", "mmOutStream.writes(" + Arrays.toString(bytes) + ") FAILED.  Now printing error");
-                Log.v("ManageConnectionThread", e.toString());
-            }
-        }
-
-        /* Call this from the main activity to shutdown the connection */
-        public void cancel() {
-            try {
-                //Recently added these.  Commented out mmOutStream.close()in the Write function of this thread
-                //mmOutStream.close();
-                //mmInStream.close();
-                inputStreamIsOpen = false;
-                Log.v("ManageConnectionThread", "inputStreamIsOpen flag is set to false since stop button was pressed");
-
-                throw new IOException("blah");
-               // mmInStream = null;
-                //mmOutStream = null;
-
-                //mmSocket.close();  //Use to be uncommented 1/11/2016
-            } catch (IOException e) { }
-        }
-    }
-
-
-    // KQSNewcomment
-
-    private class ConnectThread extends Thread {
-        private BluetoothDevice mmDevice;
-
-        public ConnectThread(BluetoothDevice device, String uuid_string) {
-            // Use a temporary object that is later assigned to mmSocket,
-            // because mmSocket is final
-            BluetoothSocket tmp = null;
-            mmDevice = device;
-
-            // Get a BluetoothSocket to connect with the given BluetoothDevice
-            try {
-                // MY_UUID is the app's UUID string, also used by the server code
-
-                //Tried connecting insecure and secure KQS_TO_DO
-                 UUID my_uuid = UUID.fromString(uuid_string);
-
-                tmp = device.createRfcommSocketToServiceRecord(my_uuid);
-                Log.v("ConnectThread","createRfcommSocket successful in ConnectedThread constrcutor");
-                uuid_that_connected = my_uuid;
-            } catch (IOException e) {
-                Log.v("ConnectThread","createRfcommSocket failed in ConnectedThread constrcutor");
-            }
-            mmSocket = tmp;
-
-        }
-
-        public void run() {
-            // Cancel discovery because it will slow down the connection
-            mBluetoothAdapter.cancelDiscovery();
-            Log.v("ConnectThread", "mmSocket.isConnected? " + mmSocket.isConnected());
-
-            try {
-                // Connect the device through the socket. This will block
-                // until it succeeds or throws an exception
-                mmSocket.connect();
-                Log.v("ConnectThread", "mmSocket.isConnected? " + mmSocket.isConnected());
-                Log.v("ConnectThread", "mmSocket.connect() successful run() method inside thread");
-
-                //don't look for any more
-                foundOneSuccessfulConnection = true;
-
-                Log.v("ConnectThread", "mmSocket is now connected to " + mmSocket.getRemoteDevice().getName());
-                Log.v("ConnectThread", "uuid for mmsocket connection is " + uuid_that_connected.toString());
-
-                //Now begin manage connection thread
-
-            } catch (IOException connectException) {
-
-                Log.v("ConnectThread", "mmSocket.connect() failed in run() of thread");
-                Log.v("ConnectThread", "connectException.toString() = " + connectException.toString());
-                Log.e("Spam2", connectException.toString());
-                // Unable to connect; close the socket and get out
-                try {
-
-                    mmSocket.close();
-                } catch (IOException closeException) {
-                    Log.v("ConnectThread", "closeException.toString() = " + closeException.toString());
-                    Log.e("Spam2",closeException.toString());
-                }
-
-                //AGGRESSIVE APPROACH KQS_TO_DO
-                //makeConnection();
-                return;
-            }
-
-        }
-
-        //Will cancel an in-progress connection, and close the socket
-        public void cancel() {
-            try {
-                mmSocket.close();
-            } catch (IOException e) { }
-        }
-    }
-
-
-
     public void whatWasReadInButtonOnClick(View v)
     {
         Log.v("ReadInButtonOnClick", "printing arduinio data in logcat");
@@ -359,8 +90,6 @@ public class MainActivity extends Activity {
 
             Log.v("ReadInButtonOnClick", split_on_ampersand[i]);
         }
-
-
         //Log.v("ReadInButtonOnClick", Arrays.toString(split_on_ampersand));
     }
 
@@ -401,7 +130,7 @@ public class MainActivity extends Activity {
 
                 Log.v("startReadOnClick", "inputStreamIsOpen is being set to true - should be continuing to read");
 
-                inputStreamIsOpen = true;  //ensure that we are reading in stuff
+                inputStreamIsOpen.setVal(true);  //ensure that we are reading in stuff
 
                 byte[] read_signal = new byte[1];
                 read_signal[0] = 82;  //capital 'R'   tell arduino it is ok to start sendign data again
@@ -432,7 +161,7 @@ public class MainActivity extends Activity {
                     Toast toast5 = Toast.makeText(getApplicationContext(), "Read Operation Confirmed\n mCT.run() stub here", Toast.LENGTH_SHORT);
                     toast5.show();
 
-                    inputStreamIsOpen = true;
+                    inputStreamIsOpen.setVal(true);
 
                     Log.v("startReadOnClick", "inputStreamIsOpen flag is set to true since read button pressed");
 
@@ -494,7 +223,7 @@ public class MainActivity extends Activity {
 
             Log.v("stopReadOnClick", "Attempting to cancel mCT");
 
-            inputStreamIsOpen = false;   //instead of cancelling thread, just switch flag to keep data halted, but not shut off
+            inputStreamIsOpen.setVal(false);   //instead of cancelling thread, just switch flag to keep data halted, but not shut off
            // mCT.cancel(); //set inputsteamreadin to false
 
             Log.v("stopReadOnClick", "Current thread state = " + mCT.getState().toString());
@@ -509,8 +238,9 @@ public class MainActivity extends Activity {
     }
 
 
-    private ConnectThread connectedThread;
+    //private ConnectThread connectedThread;
 
+    private ConnectThread2 connectThread2;
 
     public void awsIntentOnClick(View v)
     {
@@ -548,7 +278,7 @@ public class MainActivity extends Activity {
 
         mHandler = new AdafruitDataHandler(this);
 
-        inputStreamIsOpen = false;
+        inputStreamIsOpen = new BooleanWrapper(false);
 
         sb = new StringBuffer("");
 
@@ -754,7 +484,11 @@ public class MainActivity extends Activity {
 
         Log.v("makeConnection", uuid_list.toString());
 
-       // BooleanWrapper booleanWrapper = new BooleanWrapper(false);
+       BooleanWrapper booleanWrapper = new BooleanWrapper(false);
+
+        BluetoothSocketWrapper bSocketWrapper = new BluetoothSocketWrapper(mmSocket);
+
+        UUID_Wrapper uuidWrapper = new UUID_Wrapper(uuid_that_connected);
 
         if(uuid_list.size() > 0)
         {
@@ -767,17 +501,27 @@ public class MainActivity extends Activity {
                 {
                     // booleanWrapper = new BooleanWrapper(false);
                     //connectedThread = new ConnectThread(mainDevice, uuid_list.get(i), uuid_that_connected, mmSocket, mBluetoothAdapter, booleanWrapper);
-                    connectedThread = new ConnectThread(mainDevice, uuid_list.get(i)); //KQSNewComment
-                    connectedThread.run();
+
+                    connectThread2 = new ConnectThread2(mainDevice, uuid_list.get(i), uuidWrapper, mBluetoothAdapter, bSocketWrapper, booleanWrapper);
+                    connectThread2.run();
+                   //WORKING
+                    //connectedThread = new ConnectThread(mainDevice, uuid_list.get(i)); //KQSNewComment
+                    //connectedThread.run();
                 }
             }
 
-           // foundOneSuccessfulConnection = booleanWrapper.val;
+            foundOneSuccessfulConnection = booleanWrapper.getVal();
+            mmSocket = bSocketWrapper.getSocket();
+            uuid_that_connected = uuidWrapper.getUuid();
 
             //Print into about mmSocket and UUID about device we connected to
             if(foundOneSuccessfulConnection == true)
             {
                 Log.v("makeConnection", "Remote device info (address and uuid");
+                if(mmSocket == null)
+                {
+                    Log.v("makeConnection", "mmSocket is null KQS");
+                }
                 Log.v("makeConnection", String.valueOf(mmSocket.getRemoteDevice().getAddress()));
                 Log.v("makeConnection", uuid_that_connected.toString());
                 Toast toast3 = Toast.makeText(getApplicationContext(), "Successfully connected to Device", Toast.LENGTH_SHORT);
@@ -812,7 +556,10 @@ public class MainActivity extends Activity {
         {
 
             Log.v("manageConnectionThread", "Starting manage connection thread");
-            mCT = new ManageConnectionThread(mmSocket);
+ //    public ManageConnectionThread(BluetoothSocket globalSocket, StringBuffer globalStringBuffer, AdafruitDataHandler globalHandler, BooleanWrapper globalBoolean) {
+
+          mCT = new ManageConnectionThread(mmSocket, sb, mHandler, inputStreamIsOpen);
+          //  mCT = new ManageConnectionThread(mmSocket);  OLD ONE THAT WORKED
             Log.v("manageConnectionThread", "mCT set equal to new ManageConnectionThread(mmSocket)");
            // mCT.run();
            // byte[] test = {0,1,2};
@@ -1004,30 +751,4 @@ public class MainActivity extends Activity {
         }
     }
 
-    public ArrayList<String> meetsCriteriaTenComponents(String parseChunk)
-    {
-        ArrayList<String> results = new ArrayList<String>();
-
-        Log.v("meetsCriteria", "raw string = " + parseChunk);
-
-        String onlyCommasDelimiting = parseChunk.replace("$",",");
-
-        Log.v("meetsCriteria", "with commas instead = " + onlyCommasDelimiting);
-
-        String[] components = onlyCommasDelimiting.split(",");
-
-        Log.v("meetsCriteria", Arrays.toString(components));
-
-        if(components.length != 10)
-        {
-            return null;
-        }
-
-        for(int i = 0; i < components.length; i++)
-        {
-            results.add(components[i]);
-        }
-
-        return results;
-    }
 }
