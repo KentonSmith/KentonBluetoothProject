@@ -1,11 +1,11 @@
 # KentonBluetoothProject
 
 ###Hardware Used (BOM)
-*Arduino UNO
-*JY-MCU Bluetooth Module https://core-electronics.com.au/attachments/guides/Product-User-Guide-JY-MCU-Bluetooth-UART-R1-0.pdf
-*Adafruit BNO055 9 DOF Sensor https://www.adafruit.com/products/2472
-*Android Phone
-*22 Gauge Wire
+* Arduino UNO
+* JY-MCU Bluetooth Module https://core-electronics.com.au/attachments/guides/Product-User-Guide-JY-MCU-Bluetooth-UART-R1-0.pdf
+* Adafruit BNO055 9 DOF Sensor https://www.adafruit.com/products/2472
+* Android Phone
+* 22 Gauge Wire
 
 ###High Level Description
 This sensor apparatus reads in data from the Adafruit sensor, encodes it in a parseable format, and transmits it via Bluetooth to an 
