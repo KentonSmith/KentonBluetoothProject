@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.IntentSender;
 import android.os.Handler;
 import android.os.Message;
 import android.os.ParcelUuid;
@@ -32,23 +33,48 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
 
-public class MainActivity extends Activity {
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.drive.*;
+import com.google.android.gms.drive.events.ChangeEvent;
+import com.google.android.gms.drive.events.ChangeListener;
+//import gms.drive.*;
 
+
+//Got implements from http://stackoverflow.com/questions/23751905/error-implementing-googleapiclient-builder-for-android-development
+public class MainActivity extends Activity implements GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener {
+
+
+    private DriveId ascendDataFolder;
+
+    private DriveFolder mDriveFolder;
+    private DriveFile someFile;
 
     private final static int REQUEST_ENABLE_BT = 1;
+    private final static int RESOLVE_CONNECTION_REQUEST_CODE = 500;
     private boolean fromBluetooth = false;
     private BluetoothAdapter mBluetoothAdapter;
     private ArrayAdapter mArrayAdapter;
     private static AdafruitDataHandler mHandler;
     private BooleanWrapper inputStreamIsOpen;
     private ListView lv;
+
+    private static final int REQUEST_CODE_RESOLUTION = 3;
 
     //KQS_TO_DO_11_26_PM
     private Boolean foundOneSuccessfulConnection = false;
@@ -65,7 +91,14 @@ public class MainActivity extends Activity {
     private BluetoothSocket mmSocket;
     private ManageConnectionThread mCT;
     private StringBuffer sb;
+    private StringBuffer totalString;
     private ArrayList<String> ArduinoDataList;
+    private ArrayList<String> globalLines;
+
+    private DriveId mFolderDriveId;
+
+    //RESOURCE ID
+    private final static String EXISTING_FOLDER_ID = "0B5a_d0CBZLskMjliVnoycmQwLUU";
 
     //NEED TO CHANGE FOR PC, POSSIBLE LOOP THROUGH ALL POSSIBLE UUIDS
     //Randomly off internet; 1d8df488-9d58-11e5-8994-feff819cdc9f
@@ -77,20 +110,186 @@ public class MainActivity extends Activity {
     private ArrayList<BluetoothDevice> myDevices;
     private ArrayList<String> uuid_list;
 
+    private GoogleApiClient mGoogleApiClient;
+
+    final private ResultCallback<DriveApi.DriveContentsResult> driveContentsCallback = new
+            ResultCallback<DriveApi.DriveContentsResult>() {
+                @Override
+                public void onResult(DriveApi.DriveContentsResult result) {
+                    if (!result.getStatus().isSuccess()) {
+                        Log.v("createFile","Error while trying to create new file contents");
+                        return;
+                    }
+                    final DriveContents driveContents = result.getDriveContents();
+
+                    Log.v("createFile","creating thread");
+
+
+                    // Perform I/O off the UI thread.
+                    new Thread() {
+                        @Override
+                        public void run() {
+                            // write content to DriveContents
+                            OutputStream outputStream = driveContents.getOutputStream();
+                            Writer writer = new OutputStreamWriter(outputStream);
+                            try {
+                                for(int i = 0; i < globalLines.size(); i++)
+                                {
+
+                                  writer.write(globalLines.get(i) + "\n");
+                                }
+                                //writer.write("Hello World!");
+                                writer.close();
+                            } catch (IOException e) {
+                                Log.e("CreateFile", e.getMessage());
+                            }
+
+                            Date myDate = new Date();
+
+                            MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
+                                    .setTitle("AscendData_"+myDate.toString()).setMimeType("text/csv").setStarred(true).build();
+
+
+                            // MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
+                             //       .setTitle("Ascend_"+myDate.toString()).setMimeType("text/plain").setStarred(true).build();
+
+                                   // .setMimeType("text/plain")
+
+
+                            DriveFolder folder = mFolderDriveId.asDriveFolder();
+                            folder.createFile(mGoogleApiClient, changeSet, driveContents)
+                                    .setResultCallback(fileCallback);
+
+                            // create a file on root folder
+                            /*
+                            Drive.DriveApi.getRootFolder(mGoogleApiClient)
+                                    .createFile(mGoogleApiClient, changeSet, driveContents)
+                                    .setResultCallback(fileCallback);
+                                    */
+                        }
+                    }.start();
+                }
+            };
+
+    final private ResultCallback<DriveFolder.DriveFileResult> fileCallback = new
+            ResultCallback<DriveFolder.DriveFileResult>() {
+                @Override
+                public void onResult(DriveFolder.DriveFileResult result) {
+                    if (!result.getStatus().isSuccess()) {
+                        //showMessage("Error while trying to create the file");
+                        return;
+                    }
+                   // showMessage("Created a file with content: " + result.getDriveFile().getDriveId());
+                }
+            };
+
+    public void createFile()
+    {
+        Log.v("createFile", "mGoogleApiClient.isConnected() ?" + mGoogleApiClient.isConnected());
+//        Log.v("createFile", "mGoogleApiClient.isConnected() ?" + mGoogleApiClient.isConnected());
+
+
+      //  Drive.DriveApi.fetchDriveId()
+
+        Drive.DriveApi.fetchDriveId(mGoogleApiClient, EXISTING_FOLDER_ID)
+                .setResultCallback(idCallback);
+        //DriveId:CAESABi-KiCarZCPplIoAQ==
+       // Drive.DriveApi.fetchDriveId(mGoogleApiClient, "CAESABi-KiCarZCPplIoAQ==")
+         //       .setResultCallback(idCallback);
+
+        //WORKS (direct route without getting folder)
+       // Drive.DriveApi.newDriveContents(mGoogleApiClient)
+        //        .setResultCallback(driveContentsCallback);
+    }
+
+    final private ResultCallback<DriveApi.DriveIdResult> idCallback = new ResultCallback<DriveApi.DriveIdResult>() {
+        @Override
+        public void onResult(DriveApi.DriveIdResult result) {
+            if (!result.getStatus().isSuccess()) {
+                Log.v("createFile","Cannot find DriveId. Are you authorized to view this file?");
+                return;
+            }
+            Log.v("createFile", result.getDriveId().toString());
+            mFolderDriveId = result.getDriveId();
+            Drive.DriveApi.newDriveContents(mGoogleApiClient)
+                  .setResultCallback(driveContentsCallback);
+            //Drive.DriveApi.newDriveContents(getGoogleApiClient())
+              //      .setResultCallback(driveContentsCallback);
+        }
+    };
+
+    public void createFolderToGetID()
+    {
+        MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
+                .setTitle("Ascend_Data").build();
+
+
+        Drive.DriveApi.getRootFolder(mGoogleApiClient).createFolder(
+                mGoogleApiClient, changeSet).setResultCallback(folderCreatedCallback);
+
+
+    }
+
+    ResultCallback<DriveFolder.DriveFolderResult> folderCreatedCallback = new
+            ResultCallback<DriveFolder.DriveFolderResult>() {
+                @Override
+                public void onResult(DriveFolder.DriveFolderResult result) {
+                    if (!result.getStatus().isSuccess()) {
+                        //("Error while trying to create the folder");
+                        return;
+                    }
+
+              //  result.getDriveFolder().addChangeSubscription(changeListener);
+                    //ascendDataFolder = result.getDriveFolder().getDriveId();
+
+                    mDriveFolder = result.getDriveFolder();
+                    mDriveFolder.addChangeListener(mGoogleApiClient, changeListener);
+
+                   // result.getDriveFolder().addChangeListener(mGoogleApiClient, changeListener);
+                     //someFile = ascendDataFolder.asDriveFile();
+//                    someFile.addChangeSubscription((GoogleApiClient) changeListener);
+                   // Log.v("createFolder", "encode to string = " + ascendDataFolder.encodeToString());
+                    //Log.v("createFolder", "to string = " + ascendDataFolder.toString());
+                   // Log.v("createFolder", "encode to string = " + ascendDataFolder.);
+                    //android.os.SystemClock.sleep(5000);
+
+                    //Log.v("createFolder", "resource ID = " + result.getDriveFolder().getDriveId().getResourceId());
+                    //String s = result.getDriveFolder().getDriveId().getResourceId();
+                }
+            };
+
+    final private ChangeListener changeListener = new ChangeListener() {
+        @Override
+        public void onChange(ChangeEvent event) {
+            //event.
+            Log.v("createFolder", "Resource ID = " + mDriveFolder.getDriveId().getResourceId());
+            Log.v("createFolder", "Resource ID = " + event.getDriveId().getResourceId());
+        }
+    };
+
     public void whatWasReadInButtonOnClick(View v)
     {
         Log.v("ReadInButtonOnClick", "printing arduinio data in logcat");
 
-        String[] split_on_ampersand = sb.toString().split("&");
+        ArrayList<String> lines = new ArrayList<String>();
+
+        lines.add( "Time elapsed(milliseconds), EulerX (angle), EulerY (angle), EulerZ (angle), GyroX (rad/s), GyroY (rad/s), GyroZ (rad/s), Lin_AccX (m/s^2), Lin_AccY (m/s^2), Lin_AccZ (m/s^2)");
+
+        String[] split_on_ampersand = totalString.toString().split("&");
 
         Log.v("ReadInButtonOnClick", "Time elapsed(milliseconds), EulerX (angle), EulerY (angle), EulerZ (angle), GyroX (rad/s), GyroY (rad/s), GyroZ (rad/s), Lin_AccX (m/s^2), Lin_AccY (m/s^2), Lin_AccZ (m/s^2)");
         for(int i = 0; i < split_on_ampersand.length; i++)
         {
             split_on_ampersand[i] = split_on_ampersand[i].replace("$",",");
-
+            lines.add(split_on_ampersand[i]);
             Log.v("ReadInButtonOnClick", split_on_ampersand[i]);
         }
         //Log.v("ReadInButtonOnClick", Arrays.toString(split_on_ampersand));
+
+        this.globalLines = lines;
+
+       // createFolderToGetID();
+       createFile();
     }
 
 
@@ -192,8 +391,7 @@ public class MainActivity extends Activity {
             Toast toast4 = Toast.makeText(getApplicationContext(), "mCT is null.  No reading process to stop", Toast.LENGTH_SHORT);
             toast4.show();
             Log.v("stopReadOnClick", "mCT is null. No reading process to stop");
-        }
-        else {
+        } else {
 
             Log.v("stopReadOnClick", "Current thread state = " + mCT.getState().toString());
 
@@ -214,7 +412,6 @@ public class MainActivity extends Activity {
            // mCT.cancel(); //set inputsteamreadin to false
 
             Log.v("stopReadOnClick", "Current thread state = " + mCT.getState().toString());
-
 //            mCT = null;
         }
     }
@@ -232,16 +429,71 @@ public class MainActivity extends Activity {
     */
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        if(mGoogleApiClient.isConnected() == false)
+        {
+            mGoogleApiClient.connect();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        mGoogleApiClient.disconnect();
+        super.onStop();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        Log.v("onConnectionSuspended", "mGoogleApiClient connection is suspended");
+
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        Log.v("onConnected", "mGoogleApiClient is connected");
+        Toast toast3 = Toast.makeText(getApplicationContext(), "mGoogleApiClient is connected", Toast.LENGTH_SHORT);
+        toast3.show();
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Log.v("onConnectionFailed", "In onConnectionFailed after attempting mGoogleApiClient.connect()");
+        if (connectionResult.hasResolution()) {
+            try {
+                connectionResult.startResolutionForResult(this, RESOLVE_CONNECTION_REQUEST_CODE);
+            } catch (IntentSender.SendIntentException e) {
+                // Unable to resolve, message user appropriately
+            }
+        } else {
+            GooglePlayServicesUtil.getErrorDialog(connectionResult.getErrorCode(), this, 0).show();
+        }
+    }
+
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Drive.API)
+                .addScope(Drive.SCOPE_FILE)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .build();
+
+        Log.v("onCreate", "mGoogleApiClient ==  null? " + (mGoogleApiClient == null));
+
+       // mGoogleApiClient.connect();
+        globalLines = new ArrayList<String>();
 
         mHandler = new AdafruitDataHandler(this);
 
         inputStreamIsOpen = new BooleanWrapper(false);
 
         sb = new StringBuffer("");
-
+        totalString = new StringBuffer("");
         ArduinoDataList = new ArrayList<String>();
 
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -382,6 +634,17 @@ public class MainActivity extends Activity {
     public void clearButtonOnClick(View view) {
         Toast toast = Toast.makeText(getApplicationContext(), "Clear Button Pressed", Toast.LENGTH_SHORT);
         toast.show();
+
+
+        /*
+        MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
+                .setTitle("New file")
+                .setMimeType("text/plain").build();
+
+        mDriveFolder.createFolder(mGoogleApiClient, changeSet);
+*/
+
+       // Log.v("createFolder", "Resource ID = " + ascendDataFolder.getResourceId());
         mArrayAdapter.clear();
         mArrayAdapter.notifyDataSetChanged();
     }
@@ -516,7 +779,7 @@ public class MainActivity extends Activity {
             Log.v("manageConnectionThread", "Starting manage connection thread");
  //    public ManageConnectionThread(BluetoothSocket globalSocket, StringBuffer globalStringBuffer, AdafruitDataHandler globalHandler, BooleanWrapper globalBoolean) {
 
-          mCT = new ManageConnectionThread(mmSocket, sb, mHandler, inputStreamIsOpen);
+          mCT = new ManageConnectionThread(mmSocket, sb, mHandler, inputStreamIsOpen, totalString);
           //  mCT = new ManageConnectionThread(mmSocket);  OLD ONE THAT WORKED
             Log.v("manageConnectionThread", "mCT set equal to new ManageConnectionThread(mmSocket)");
            // mCT.run();
@@ -683,8 +946,20 @@ public class MainActivity extends Activity {
 
         Log.v("onActivityResult", getIntent().getAction());
         Log.v("onActivityResult", "resultCode = " + resultCode);
+
+
         Toast toast5 = Toast.makeText(getApplicationContext(), "Currently In Activity Result", Toast.LENGTH_LONG);
         toast5.show();
+        if(requestCode == RESOLVE_CONNECTION_REQUEST_CODE)
+        {
+            if (resultCode == RESULT_OK) {
+                mGoogleApiClient.connect();
+            }
+            return;
+        }
+
+
+
         if (fromBluetooth == true && resultCode == RESULT_OK) {
             Toast toast2 = Toast.makeText(getApplicationContext(), "RESULT_OK for enabling bluetooth", Toast.LENGTH_LONG);
             toast2.show();

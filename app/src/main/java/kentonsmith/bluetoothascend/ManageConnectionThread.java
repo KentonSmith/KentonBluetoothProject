@@ -29,7 +29,9 @@ public class ManageConnectionThread extends Thread {
     // private final OutputStream mmOutStream;
     private BooleanWrapper localBooleanWrapper;
 
-    public ManageConnectionThread(BluetoothSocket globalSocket, StringBuffer globalStringBuffer, AdafruitDataHandler globalHandler, BooleanWrapper globalBoolean) {
+    private StringBuffer localTotalStringBuffer;
+
+    public ManageConnectionThread(BluetoothSocket globalSocket, StringBuffer globalStringBuffer, AdafruitDataHandler globalHandler, BooleanWrapper globalBoolean, StringBuffer totalStringBuffer) {
         //  mmSocket = socket;
         socket = globalSocket;
         InputStream tmpIn = null;
@@ -37,6 +39,7 @@ public class ManageConnectionThread extends Thread {
         this.sb = globalStringBuffer;
         this.localHandler = globalHandler;
         this.localBooleanWrapper = globalBoolean;
+        this.localTotalStringBuffer = totalStringBuffer;
 
         // Get the input and output streams, using temp objects because
         // member streams are final
@@ -70,6 +73,7 @@ public class ManageConnectionThread extends Thread {
                         // Read from the InputStream
                         bytes = mmInStream.read(buffer);
                         readMessage = new String(buffer, 0, bytes);
+                        this.localTotalStringBuffer.append(readMessage);
                         Log.v("ManageConnectionThread", readMessage);
 
                         //lock

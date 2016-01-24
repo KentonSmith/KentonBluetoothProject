@@ -233,6 +233,7 @@ void loop(void)
 
     if(state == 'R')
     {
+      
        /* Get a new sensor event */
         //lcd.print("Read");
        
@@ -299,6 +300,7 @@ void loop(void)
     {
      // lcd.print("Stop");
       delay(10);  //this is so not tight loop when not reading
+      start_time = millis();
     }
 
      
