@@ -38,13 +38,13 @@
 
 ///#define BLUETOOTH_SPEED 9600
 #define BLUETOOTH_SPEED 115200
-SoftwareSerial mySerial(10, 11); // RX, TX
- 
+//SoftwareSerial mySerial(10, 11); // RX, TX               //used to be (10, 11)
+ SoftwareSerial mySerial(3, 5);  //changed to digital 3 and 5
  unsigned long time;
 unsigned long start_time;
 
 
-LiquidCrystal lcd(7, 8, 4, 5, 6, 12);
+//LiquidCrystal lcd(7, 8, 4, 5, 6, 12);
 
 int num_iterations = 500;
 int count = 0;
