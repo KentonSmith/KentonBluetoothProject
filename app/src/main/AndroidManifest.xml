@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <!--android:icon="@mipmap/ic_launcher"-->
 
     <application
         android:allowBackup="true"
@@ -14,15 +15,20 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name=".MainActivity"
+            android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            >
+            <!-- the current style we are using doesn't allow for actionbar so no image at top-->
             <meta-data android:name="com.google.android.apps.drive.APP_ID" android:value="id=401177528854-n8pel2b1k2n2gl9frmn5cl3m6e7c20ke.apps.googleusercontent.com
 " />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
                 <action android:name="com.google.android.apps.drive.DRIVE_OPEN" />
+
                 <data android:mimeType="application/vnd.google-apps.drive-sdk.1234567890" />
                 <data android:mimeType="image/png" />
                 <data android:mimeType="image/jpeg" />

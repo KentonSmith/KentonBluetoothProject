@@ -146,6 +146,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
                             Date myDate = new Date();
 
+
+
                             MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
                                     .setTitle("AscendData_"+myDate.toString()).setMimeType("text/csv").setStarred(true).build();
 
@@ -166,6 +168,15 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                                     .createFile(mGoogleApiClient, changeSet, driveContents)
                                     .setResultCallback(fileCallback);
                                     */
+
+                            //reset strings for next run
+                            globalLines.clear();
+                            totalString.setLength(0);
+                            sb.setLength(0);
+
+                            //globalLines = new ArrayList<String>();
+                            //totalString = new StringBuffer("");
+                            //sb = new StringBuffer("");
                         }
                     }.start();
                 }

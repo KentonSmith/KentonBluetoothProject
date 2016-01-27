@@ -39,7 +39,8 @@
 ///#define BLUETOOTH_SPEED 9600
 #define BLUETOOTH_SPEED 115200
 //SoftwareSerial mySerial(10, 11); // RX, TX               //used to be (10, 11)
- SoftwareSerial mySerial(3, 5);  //changed to digital 3 and 5
+ //SoftwareSerial mySerial(3, 5);  //changed to digital 3 and 5
+ SoftwareSerial mySerial(3, 7);  //changed to digital 3 and 7
  unsigned long time;
 unsigned long start_time;
 
